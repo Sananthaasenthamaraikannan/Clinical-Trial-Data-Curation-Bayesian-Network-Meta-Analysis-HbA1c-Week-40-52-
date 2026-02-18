@@ -1,0 +1,2 @@
+# Clinical-Trial-Data-Curation-Bayesian-Network-Meta-Analysis-HbA1c-Week-40-52-
+Conducted structured extraction of Phase 3 RCT data to evaluate comparative HbA1c reduction of GLP-1 therapies at ~40 weeks. Harmonized endpoints, converted CIs to standard errors, and built analysis-ready datasets. Implemented a Bayesian network meta-analysis in R and documented estimand and population assumptions for transparency.
