@@ -1,0 +1,4 @@
+study_id,treatment,comparator,timepoint_weeks,md,ci_low,ci_high,se,effect_direction_check,source_location
+SURPASS-2,tirzepatide_5,semaglutide_1,40,-0.15,-0.28,-0.03,0.06378,pass,"NEJM full text p.503 Abstract (treatment differences vs semaglutide, 95% CI)"
+SURPASS-2,tirzepatide_10,semaglutide_1,40,-0.39,-0.51,-0.26,0.06378,pass,"NEJM full text p.503 Abstract (treatment differences vs semaglutide, 95% CI)"
+SURPASS-2,tirzepatide_15,semaglutide_1,40,-0.45,-0.57,-0.32,0.06378,pass,"NEJM full text p.503 Abstract (treatment differences vs semaglutide, 95% CI)"
