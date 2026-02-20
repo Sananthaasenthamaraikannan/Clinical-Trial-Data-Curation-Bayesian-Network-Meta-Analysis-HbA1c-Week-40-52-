@@ -1,0 +1,205 @@
+---
+title: "Comparative Efficacy of Tirzepatide vs Semaglutide (SURPASS-2)"
+author: "Sananthaa J S"
+date: "2026-02-19"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE)
+library(readr)
+library(dplyr)
+library(gemtc)
+library(coda)
+library(rjags)
+```
+
+1. Background
+
+Type 2 diabetes (T2D) is a progressive metabolic disorder characterized by chronic hyperglycemia and associated long-term cardiovascular and microvascular complications. HbA1c reduction remains the primary regulatory endpoint for assessing glycemic efficacy in randomized clinical trials.
+
+Tirzepatide is a dual GIP and GLP-1 receptor agonist developed to improve glycemic control beyond selective GLP-1 receptor agonists such as semaglutide. The SURPASS-2 trial evaluated once-weekly tirzepatide (5 mg, 10 mg, 15 mg) versus semaglutide 1 mg in adults with T2D inadequately controlled on metformin.
+
+This project demonstrates a pharmaceutical-style evidence synthesis workflow: structured data extraction, contrast harmonization, and Bayesian network meta-analysis (NMA).
+
+2. Research Question
+
+What is the comparative efficacy of tirzepatide versus semaglutide (and ultimately liraglutide) in reducing HbA1c at approximately 40–52 weeks in adults with Type 2 Diabetes?
+
+3. PICO Framework
+
+Population
+Adults (≥18 years) with type 2 diabetes inadequately controlled on metformin ≥1500 mg/day.
+
+Intervention
+Tirzepatide 5 mg, 10 mg, 15 mg once weekly.
+
+Comparator
+Semaglutide 1 mg once weekly.
+
+Outcome
+Change in HbA1c from baseline (percentage points).
+
+Timepoint Rule
+Closest to 40–52 weeks.
+SURPASS-2 primary endpoint = Week 40.
+
+4. Data Sources
+
+SURPASS-2 NEJM full text
+ClinicalTrials.gov registry (NCT03987919)
+Trial protocol and Statistical Analysis Plan (SAP)
+All extracted values were manually curated with source-location documentation.
+
+5. Data Extraction
+5.1 Arm-Level Dataset
+
+```{r}
+arms <- read_csv("../02_data/arms.csv")
+arms
+```
+Outcome extracted:
+HbA1c change from baseline to Week 40
+Reported as estimated mean change (treatment-regimen estimand)
+
+5.2 Contrast-Level Dataset
+
+```{r}
+re <- read_csv("../02_data/relative_effects.csv")
+re
+```
+Standard errors were computed from 95% CI using:
+$SE = \frac{CI_{high} - CI_{low}}{2 \times 1.96}$
+
+For example, for tirzepatide 5 mg:
+
+\[
+SE = \frac{-0.03 - (-0.28)}{2 \times 1.96}
+= \frac{0.25}{3.92}
+= 0.06378
+\]
+
+All three contrasts had identical CI widths (0.25), producing SE ≈ 0.06378.
+
+6. Bayesian Network Meta-Analysis
+
+Because only one multi-arm RCT is available, this analysis serves as a methodological demonstration rather than a full multi-trial NMA.
+
+6.1 Prepare Data for gemtc
+```{r}
+re_gemtc <- re %>%
+  transmute(
+    study      = study_id,
+    treatment  = treatment,
+    comparator = comparator,
+    diff       = md,
+    std.err    = se
+  )
+
+baseline_rows <- re_gemtc %>%
+  distinct(study) %>%
+  mutate(
+    treatment  = "semaglutide_1",
+    comparator = NA_character_,
+    diff       = NA_real_,
+    std.err    = 0.0001
+  )
+
+re_gemtc2 <- bind_rows(baseline_rows, re_gemtc)
+network <- mtc.network(data.re = re_gemtc2)
+
+summary(network)
+```
+
+6.2 Fixed-Effect Model
+```{r}
+model_fe <- mtc.model(
+  network,
+  type        = "consistency",
+  linearModel = "fixed",
+  likelihood  = "normal",
+  link        = "identity"
+)
+
+set.seed(123)
+result_fe <- mtc.run(model_fe, n.adapt = 5000, n.iter = 20000, thin = 10)
+
+summary(result_fe)
+```
+
+Relative Effects vs Semaglutide
+```{r}
+relative.effect(result_fe, t1 = "semaglutide_1")
+```
+
+Convergence Diagnostics
+```{r}
+gelman.diag(as.mcmc.list(result_fe), autoburnin = FALSE)
+effectiveSize(as.mcmc.list(result_fe))
+```
+
+6.3 Random-Effects Model (Demonstration Only)
+
+With only one study, between-study heterogeneity (tau) is not identifiable. Results are prior-driven.
+```{r}
+model_re <- mtc.model(
+  network,
+  type        = "consistency",
+  linearModel = "random",
+  likelihood  = "normal",
+  link        = "identity"
+)
+
+set.seed(123)
+result_re <- mtc.run(model_re, n.adapt = 5000, n.iter = 20000, thin = 10)
+
+summary(result_re)
+```
+
+7. Results
+All tirzepatide doses demonstrated greater HbA1c reduction compared to semaglutide 1 mg at Week 40:
+Tirzepatide 5 mg: MD −0.15
+Tirzepatide 10 mg: MD −0.39
+Tirzepatide 15 mg: MD −0.45
+Higher doses produced progressively larger reductions.
+Ranking probabilities (interpreted cautiously) favor tirzepatide, particularly the 15 mg dose.
+
+8. Competitive Intelligence Interpretation
+From a landscape perspective:
+Tirzepatide demonstrates incremental HbA1c reductions over semaglutide.
+Dose-response separation suggests meaningful differentiation.
+Findings support positioning at higher doses for maximum glycemic efficacy.
+However, interpretation is limited to a single RCT and does not incorporate external semaglutide or liraglutide trials.
+
+9. Limitations
+Single RCT only — no true multi-study network.
+Open-label comparator arm.
+Multi-arm covariance not modeled explicitly.
+Arm-level SDs not available in extracted excerpt.
+Heterogeneity cannot be estimated with one study.
+
+
+10. Next Steps to Build Full NMA
+
+To complete the research question:
+Add 40–52 week semaglutide RCTs (SUSTAIN program).
+Add 40–52 week liraglutide RCTs.
+Extract consistent HbA1c change endpoints.
+Harmonize estimands and background therapy.
+Re-run full Bayesian random-effects NMA.
+
+11. Reproducibility
+```{r}
+sessionInfo()
+```
+
+12. Conclusion
+
+This project demonstrates:
+Structured clinical trial data extraction
+Estimand-aware endpoint harmonization
+Contrast derivation from published CIs
+Bayesian network meta-analysis implementation
+Transparent audit trail documentation
+
+The workflow reflects pharmaceutical evidence synthesis practices and provides a scalable foundation for expanding into a full competitive landscape meta-analysis.
