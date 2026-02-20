@@ -57,7 +57,7 @@ Contrast-level dataset containing:
 Standard errors were calculated using:
 SE = (CI_high − CI_low) / (2 × 1.96)
 
-## 🔬 Analysis Approach
+#Analysis Approach
 
 Bayesian network meta-analysis was implemented using the `gemtc` package.
 
