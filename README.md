@@ -1,4 +1,4 @@
-# Clinical-Trial-Data-Curation-Bayesian-Network-Meta-Analysis-HbA1c-Week-40-52-
+Clinical-Trial-Data-Curation-Bayesian-Network-Meta-Analysis-HbA1c-Week-40-52-
 Conducted structured extraction of Phase 3 RCT data to evaluate comparative HbA1c reduction of GLP-1 therapies at ~40 weeks. Harmonized endpoints, converted CIs to standard errors, and built analysis-ready datasets. Implemented a Bayesian network meta-analysis in R and documented estimand and population assumptions for transparency.
 
 #Overview
@@ -85,3 +85,24 @@ This project demonstrates workflow capability rather than definitive pooled esti
 - Reproducible analytical workflow
 
 The structure is scalable to multi-trial network meta-analysis including semaglutide and liraglutide trials at 40–52 weeks.
+
+#Technologies Used
+
+- **R** (statistical computing)
+- **tidyverse** (data wrangling)
+- **Bayesian modelling framework in R** (for NMA)
+- **Reproducible workflow** (scripts / R Markdown outputs)
+#What I Learned
+
+- How to convert real-world trial reporting into **standardized, analysis-ready** structures  
+- Practical challenges in **endpoint parsing** and cross-trial comparability  
+- Building a reproducible pipeline in **R** for evidence synthesis  
+- Core concepts behind **Bayesian network meta-analysis** and interpreting outputs  
+- Importance of **documentation and assumptions** in regulated/clinical contexts******
+
+#How I Built It
+
+- Designed a curation template to capture trial identifiers, arms, and HbA1c endpoints  
+- Implemented endpoint harmonization logic for a consistent Week 40–52 window  
+- Wrote R scripts to transform curated inputs into analysis-ready datasets  
+- Implemented the Bayesian NMA workflow and generated reproducible summaries
